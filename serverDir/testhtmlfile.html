@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test File</title>
+        <link rel="stylesheet" href="testcssfile.css">
+    </head>
+    <body>
+        <h1>Simple HTML File</h1>
+        <p>This is a simple html file inside the project's directory. This file is for testing the GET and POST functionality of the server</p>
+        <p>Submitting data using the following form sends a POST request to /htmlformoutput.txt and overwrites the file data.</p>
+        <div>
+            <form method="POST" action="/htmlformoutput.txt" id="form">
+                <label for="first-name">First Name:</label></br>
+                <input type="text" name="first-name" id="first-name" placeholder="Enter your first name"/></br>
+                <label for="last-name">Last Name:</label></br>
+                <input type="text" name="last-name" id="last-name" placeholder="Enter your last name"/></br>
+                <label for="email">Email:</label></br>
+                <input type="email" name="email" id="email" placeholder="Enter your email"/></br>
+                <button type="submit">Submit Data</button>
+                <button type="reset">Clear</button>
+            </form>
+        </div>
+
+    </body>
+</html>
