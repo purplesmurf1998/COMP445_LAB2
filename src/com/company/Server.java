@@ -9,34 +9,24 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class Server {
+    private boolean verbose = false;
     private int port = 8080; // default port
     private String directory = System.getProperty("user.dir") + "/serverDir"; // default directory
 
     // constructor that uses default values for port and directory
     public Server() {
         System.out.println("Created server with following properties:\n" +
+                "\tVERBOSE: " + this.verbose + "\n" +
                 "\tPORT: " + this.port + "\n" +
                 "\tDIR: " + this.directory);
     }
-    // constructor that specifies the port
-    public Server(int port) {
-        this.port = port;
-        System.out.println("Created server with following properties:\n" +
-                "\tPORT: " + this.port + "\n" +
-                "\tDIR: " + this.directory);
-    }
-    // constructor that specifies the directory
-    public Server(String directory) {
-        this.directory = directory;
-        System.out.println("Created server with following properties:\n" +
-                "\tPORT: " + this.port + "\n" +
-                "\tDIR: " + this.directory);
-    }
-    // constructor that specifies the port and the directory
-    public Server(int port, String directory) {
+    public Server(boolean verbose, int port, String directory) {
+        this.verbose = verbose;
         this.port = port;
         this.directory = directory;
+
         System.out.println("Created server with following properties:\n" +
+                "\tVERBOSE: " + this.verbose + "\n" +
                 "\tPORT: " + this.port + "\n" +
                 "\tDIR: " + this.directory);
     }
@@ -58,7 +48,7 @@ public class Server {
             // print the request in the console
             String inputString;
             boolean isFirstLine = true;
-            String firstLine[] = {};
+            String[] firstLine = {};
             HashMap<String, String> headers = new HashMap<>();
 
             while ((inputString = in.readLine()) != null) {
@@ -96,7 +86,8 @@ public class Server {
     }
 
     private String processRequest(String[] args, HashMap<String, String> reqHeaders,String reqBody) {
-        if (args[1].equals("/")) {
+        String dir = cleanDir(args[1]);
+        if (dir.equals("/")) {
             // can only process GET request at this directory.
             // if not GET, return an error 400 Bad Request response
             if (args[0].equalsIgnoreCase("GET")) {
@@ -147,7 +138,7 @@ public class Server {
                     // return the contents of the specified file
                     try {
                         // try converting file into inputstream
-                        File f = new File(this.directory + args[1]);
+                        File f = new File(this.directory + dir);
                         InputStream in = new FileInputStream(f);
 
                         String body = new BufferedReader(new InputStreamReader(in)).lines().collect(Collectors.joining("\n")) + "\n";
@@ -187,11 +178,12 @@ public class Server {
                 }
                 case "POST": {
                     try {
-                        File f = new File(this.directory + args[1]);
+                        File f = new File(this.directory + dir);
                         FileWriter fileWriter = new FileWriter(f, (reqHeaders.containsKey("Overwrite") ? !reqHeaders.get("Overwrite").equalsIgnoreCase("true") : false));
                         fileWriter.write(reqBody);
                         fileWriter.close();
 
+                        String body = "POST request successful\n";
                         Calendar calendar = Calendar.getInstance();
                         calendar.setTime(new Date());
                         Date timestamp = calendar.getTime();
@@ -205,7 +197,7 @@ public class Server {
                                 "Expires: " + expires
                         };
 
-                        return buildResponse(reqBody + "\n", headers);
+                        return buildResponse(body, headers);
                     } catch (IOException ex) {
                         String body = "I/O Exception while trying to write to file.";
                         Calendar calendar = Calendar.getInstance();
@@ -246,12 +238,21 @@ public class Server {
     }
 
     private String buildResponse(String body, String[] headers) {
-        String response = "";
-        for (String header: headers) {
-            response += header + "\r\n";
+        StringBuilder response = new StringBuilder();
+        if (this.verbose) {
+            for (String header: headers) {
+                response.append(header).append("\r\n");
+            }
+            response.append("\r\n");
         }
-        response += "\r\n";
-        response += body;
-        return response;
+        response.append(body);
+        return response.toString();
+    }
+
+    private String cleanDir(String dir) {
+        if (dir.equalsIgnoreCase("/"))
+            return dir;
+
+        return dir.replace("../", "");
     }
 }
