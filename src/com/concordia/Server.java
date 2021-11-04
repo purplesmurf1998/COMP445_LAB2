@@ -54,7 +54,13 @@ public class Server {
     // synchronize the method so only one thread can access it at a time
     // this makes sure no two processes are trying to read/write at the same time
     // therefore protecting the shared resources.
-    protected synchronized static String processRequest(String[] args, HashMap<String, String> reqHeaders,String reqBody) {
+    protected synchronized static String processRequest(String[] args, HashMap<String, String> reqHeaders,String reqBody, String[] error) {
+        // first check if there is an error
+        if (!error[0].equals("")) {
+            // if there is a number stored in the first position, this means there is an error
+            return buildResponse(Integer.parseInt(error[0]), "text/html", error[1]);
+        }
+
         // clean the directory path
         String dir = cleanDir(args[1]);
         // process the request

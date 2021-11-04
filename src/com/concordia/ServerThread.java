@@ -24,6 +24,8 @@ public class ServerThread extends Thread{
             boolean isFirstLine = true;
             String[] firstLine = {};
             HashMap<String, String> headers = new HashMap<>();
+            // initialize an error string to return if there is in error
+            String[] error = {"", ""};
 
             while ((inputString = in.readLine()) != null) {
                 // break out of the loop when an empty line is reached
@@ -52,16 +54,23 @@ public class ServerThread extends Thread{
             StringBuilder body = new StringBuilder();
             // only attempt reading the body if the method is POST
             // and the headers contain the Content-Length header
-            if (firstLine[0].equalsIgnoreCase("POST") && headers.containsKey("Content-Length")) {
+            // and the Content-Type header
+            if (firstLine[0].equalsIgnoreCase("POST") &&
+                    headers.containsKey("Content-Length") &&
+                    headers.containsKey("Content-Type")) {
                 int contentLength = Integer.parseInt(headers.get("Content-Length"));
                 for (int i = 0; i < contentLength; i++) {
                     body.append((char) in.read());
                 }
+            } else if (firstLine[0].equalsIgnoreCase("POST") &&
+                    (!headers.containsKey("Content-Type") || !headers.containsKey("Content-Length"))) {
+                error[0] = "400";
+                error[1] = "POST request is missing Content-Type or Content-Length header.\n";
             }
             // print the body to the console
             System.out.println("\n" + body);
             // process the request and return the response
-            out.write(Server.processRequest(firstLine, headers, body.toString()));
+            out.write(Server.processRequest(firstLine, headers, body.toString(), error));
 
             // close the connection
             out.close();
